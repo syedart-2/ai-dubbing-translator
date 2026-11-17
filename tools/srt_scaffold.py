@@ -86,13 +86,28 @@ def load(path):
     return blocks, info
 
 
-def build(path, cps, maxlen):
+def build(path, cps, maxlen, partial=False):
+    """partial=True for an excerpt, whose numbering is the source's own, not 1..N.
+
+    An excerpt of a real file is a normal job: a few blocks pasted into a chat, or
+    a range the editor wants redone. Refusing it would push the work back to a
+    hand-written script, which is the very thing these tools exist to replace.
+    """
     blocks, info = load(path)
     out, problems = [], []
+    prev_num = None
     for i, b in enumerate(blocks, 1):
         m = TS.match(b["ts"])
-        if b["num"] != str(i):
-            problems.append(f"b{i}: source numbering reads '{b['num']}'")
+        if partial:
+            if not b["num"].isdigit():
+                problems.append(f"block {i}: numbering reads '{b['num']}', which is not a number")
+            elif prev_num is not None and int(b["num"]) <= prev_num:
+                problems.append(f"block {i}: number {b['num']} does not come after {prev_num}")
+            if b["num"].isdigit():
+                prev_num = int(b["num"])
+        elif b["num"] != str(i):
+            problems.append(f"b{i}: source numbering reads '{b['num']}'. "
+                            f"If this is an excerpt rather than a whole file, pass --partial.")
         if not m:
             problems.append(f"b{i}: source has no readable timestamp line '{b['ts']}'")
             dur = None
@@ -104,7 +119,8 @@ def build(path, cps, maxlen):
         english = [l.rstrip() for l in b["text"]]
         joined = " ".join(english)
         out.append({
-            "n": i,
+            "n": int(b["num"]) if b["num"].isdigit() else i,
+            "position": i,
             "ts": b["ts"],
             "duration_s": dur,
             "char_budget": int(dur * cps) if dur and dur > 0 else None,
@@ -114,6 +130,7 @@ def build(path, cps, maxlen):
         })
     return {
         "source": str(Path(path).resolve()),
+        "partial": partial,
         "encoding": info,
         "cps": cps,
         "maxlen": maxlen,
@@ -128,6 +145,7 @@ def worksheet_md(data):
         f"# Translation worksheet",
         "",
         f"Source: `{data['source']}`",
+        ("Excerpt: the block numbers below are the source's own, not 1..N.\n" if data.get("partial") else "") +
         f"Blocks: {data['block_count']} · reading-rate ceiling: {data['cps']} chars/sec "
         f"· max {data['maxlen']} chars per line",
         f"Encoding to reproduce: BOM={data['encoding']['bom']}, CRLF={data['encoding']['crlf']}",
@@ -161,9 +179,11 @@ def main():
     ap.add_argument("--maxlen", type=int, default=50, help="maximum characters per line")
     ap.add_argument("--json", help="write the machine-readable worksheet here (feeds srt_assemble.py)")
     ap.add_argument("--md", help="write the readable worksheet here")
+    ap.add_argument("--partial", action="store_true",
+                    help="the source is an excerpt, so keep its own block numbers instead of requiring 1..N")
     a = ap.parse_args()
 
-    data = build(a.source, a.cps, a.maxlen)
+    data = build(a.source, a.cps, a.maxlen, partial=a.partial)
     if a.json:
         Path(a.json).write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"worksheet (json): {a.json}")

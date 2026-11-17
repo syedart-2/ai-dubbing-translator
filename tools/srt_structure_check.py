@@ -50,15 +50,23 @@ def main():
     ap.add_argument("--maxlen", type=int, default=50)
     ap.add_argument("--particles-file", help="newline-separated function words that may not stand as a whole block. Keep ONE such list per language, shared with the style guide, so the two cannot drift apart.")
     ap.add_argument("--json", help="also write the findings here as JSON, for a fix-and-re-run loop")
+    ap.add_argument("--partial", action="store_true", help="the file is an excerpt of a larger one, so its numbering is the source's own rather than 1..N. Numbers must still be numbers and must still increase.")
     a = ap.parse_args()
     particles = set()
     if a.particles_file:
         particles = {w.strip() for w in open(a.particles_file, encoding="utf-8-sig") if w.strip() and not w.startswith("#")}
     tgt, ti = load(a.target)
     err, adv = [], []
-    prev_start = prev_end = None
+    prev_start = prev_end = prev_num = None
     for i, b in enumerate(tgt, 1):
-        if b["num"] != str(i): err.append(f"b{i}: numbering reads '{b['num']}'")
+        if a.partial:
+            # An excerpt keeps the numbers it had in the full file, so 1..N would be wrong.
+            if not b["num"].isdigit(): err.append(f"block {i}: numbering reads '{b['num']}', not a number")
+            elif prev_num is not None and int(b["num"]) <= prev_num:
+                err.append(f"block {i}: number {b['num']} does not come after {prev_num}")
+            if b["num"].isdigit(): prev_num = int(b["num"])
+        elif b["num"] != str(i):
+            err.append(f"b{i}: numbering reads '{b['num']}' (pass --partial if this is an excerpt)")
         m = TS.match(b["ts"])
         if not m: err.append(f"b{i}: bad timestamp line '{b['ts']}'")
         if not any(l.strip() for l in b["text"]): err.append(f"b{i}: empty text")

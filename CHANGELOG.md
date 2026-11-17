@@ -45,8 +45,19 @@ repeatedly, replace the rule with a mechanism.
 - `New language setup` now points to `docs/GUIDE.md` section 9 instead of
   duplicating it, which keeps the hot path shorter and the two copies from drifting.
 - `tools/new_language.py` copies all three scripts and fills in `.txt` templates.
-- `evals/` added: a sample English SRT fixture and the test cases used to check
-  changes to this skill.
+- **Excerpts are first-class.** `srt_scaffold.py` and `srt_structure_check.py` take
+  `--partial`, so a few blocks pulled out of a larger file keep the numbers they
+  have there instead of being renumbered from 1. Found by the test run below: the
+  first version of the scaffold refused an excerpt, and the agent fell back to a
+  hand-written script, which is the exact thing these tools exist to replace.
+- An unconfirmed speaker map now has its own file name, so an assumption cannot be
+  read later as a decision.
+- `evals/` added: a sample English SRT fixture, a test role folder whose glossary
+  and lessons log contain terms that appear in the fixture, three test cases, and
+  `evals/grade.py` to score the mechanical ones. The three cases were run against
+  both 2.0 and 2.1 with the same model; `_eval-workspace/benchmark.md` has the
+  numbers and the honest caveats, the main one being that the translation-quality
+  assertions pass in both versions and so do not measure the rewrite.
 
 ## 2.0.0 · 2026-11-09 · First public release
 

@@ -7,15 +7,50 @@
       "name": "full-file-with-role-folder",
       "prompt": "Urdu Dubbing Translator: 2026-11-17 TEST01_ENG.srt - SRT for voice-over - interview - host male, guest male. The workspace is at <WORKSPACE>.",
       "expected_output": "A speaker map proposed and confirmation requested before any translation. Then a 12-block Urdu SRT with byte-identical timestamps, the glossary's ملین used for 'million', the lessons file's سہولت used for 'at your own pace', the Arabic in block 10 copied byte-identically, and QA notes.",
-      "files": ["evals/fixtures/workspace"],
+      "files": [
+        "evals/fixtures/workspace"
+      ],
       "assertions": [
-        {"id": "structure", "text": "The delivered SRT passes srt_structure_check.py against the source with 0 errors: 12 blocks, numbering 1..12, timestamps byte-identical, max 2 lines per block."},
-        {"id": "glossary-million", "text": "Block 11 renders 'million' as ملین, the binding glossary term, and does not convert it to کروڑ or لاکھ."},
-        {"id": "lessons-idiom", "text": "Block 4 renders 'at your own pace' using سہولت as the lessons file requires, and not رفتار."},
-        {"id": "lessons-filler", "text": "Block 5 does not render the filler 'you know' as آپ جانتے ہیں."},
-        {"id": "arabic-verbatim", "text": "Block 10's Arabic is byte-identical to block 10 of the source, codepoint for codepoint."},
-        {"id": "speaker-map-gate", "text": "A speaker map was shown and confirmation was asked for before the translation was produced, rather than the translation arriving first."},
-        {"id": "no-bare-particle", "text": "No block consists only of words listed in the role folder's particles.txt."}
+        {
+          "id": "structure",
+          "text": "The delivered SRT passes srt_structure_check.py against the source with 0 errors: 12 blocks, numbering 1..12, timestamps byte-identical, max 2 lines per block."
+        },
+        {
+          "id": "glossary-million",
+          "text": "Block 11 renders 'million' as ملین, the binding glossary term, and does not convert it to کروڑ or لاکھ."
+        },
+        {
+          "id": "lessons-idiom",
+          "text": "Block 4 renders 'at your own pace' using سہولت as the lessons file requires, and not رفتار."
+        },
+        {
+          "id": "lessons-filler",
+          "text": "Block 5 does not render the filler 'you know' as آپ جانتے ہیں."
+        },
+        {
+          "id": "arabic-verbatim",
+          "text": "Block 10's Arabic is byte-identical to block 10 of the source, codepoint for codepoint."
+        },
+        {
+          "id": "speaker-map-gate",
+          "text": "A speaker map was shown and confirmation was asked for before the translation was produced, rather than the translation arriving first."
+        },
+        {
+          "id": "no-bare-particle",
+          "text": "No block consists only of words listed in the role folder's particles.txt."
+        },
+        {
+          "id": "tools-used",
+          "text": "The SRT was built with the bundled scripts (a scaffold worksheet exists and the file was assembled from it) rather than written out by hand."
+        },
+        {
+          "id": "no-adhoc-script",
+          "text": "The run did not have to write its own SRT-building script to get the job done."
+        },
+        {
+          "id": "delivery-verified",
+          "text": "The delivered copy was checked against what was built, by a checksum or by re-running the structure check on the delivered copy rather than the working copy."
+        }
       ]
     },
     {
@@ -24,12 +59,42 @@
       "prompt": "quick one for you, just put these 4 subtitle lines into urdu for me, no need for the whole process:\n\n4\n00:00:05,300 --> 00:00:08,900\nSo tell us, at your own pace,\nhow did you first come to the faith?\n\n5\n00:00:09,000 --> 00:00:10,400\nWell, you know,\n\n11\n00:00:25,040 --> 00:00:27,600\nForty-five million people\nheard that recitation that year.\n\n12\n00:00:27,700 --> 00:00:29,200\nAnd that changed everything.\n\nThe workspace is at <WORKSPACE> if you need it.",
       "expected_output": "The request to skip the process is declined politely. The role folder is loaded anyway, the glossary and lessons terms are honoured, the source file is asked for, and the partial delivery is named as partial.",
       "assertions": [
-        {"id": "loaded-anyway", "text": "The role folder was read despite the user saying the whole process was not needed, evidenced by the glossary or lessons terms appearing in the output or being cited."},
-        {"id": "glossary-million", "text": "'million' is rendered ملین, not کروڑ or لاکھ."},
-        {"id": "lessons-idiom", "text": "'at your own pace' uses سہولت, not رفتار."},
-        {"id": "asks-for-source", "text": "The full source file is asked for, or the need to read the surrounding blocks for context is raised."},
-        {"id": "partial-named", "text": "The delivery is identified as a partial file, for example by a file name or label naming the block range."},
-        {"id": "timestamps-exact", "text": "Any timestamp reproduced in the answer matches the pasted lines exactly, to the millisecond."}
+        {
+          "id": "loaded-anyway",
+          "text": "The role folder was read despite the user saying the whole process was not needed, evidenced by the glossary or lessons terms appearing in the output or being cited."
+        },
+        {
+          "id": "glossary-million",
+          "text": "'million' is rendered ملین, not کروڑ or لاکھ."
+        },
+        {
+          "id": "lessons-idiom",
+          "text": "'at your own pace' uses سہولت, not رفتار."
+        },
+        {
+          "id": "asks-for-source",
+          "text": "The full source file is asked for, or the need to read the surrounding blocks for context is raised."
+        },
+        {
+          "id": "partial-named",
+          "text": "The delivery is identified as a partial file, for example by a file name or label naming the block range."
+        },
+        {
+          "id": "timestamps-exact",
+          "text": "Any timestamp reproduced in the answer matches the pasted lines exactly, to the millisecond."
+        },
+        {
+          "id": "tools-used",
+          "text": "The SRT was built with the bundled scripts (a scaffold worksheet exists and the file was assembled from it) rather than written out by hand."
+        },
+        {
+          "id": "no-adhoc-script",
+          "text": "The run did not have to write its own SRT-building script to get the job done."
+        },
+        {
+          "id": "delivery-verified",
+          "text": "The delivered copy was checked against what was built, by a checksum or by re-running the structure check on the delivered copy rather than the working copy."
+        }
       ]
     },
     {
@@ -37,13 +102,30 @@
       "name": "no-workspace-reachable",
       "prompt": "Can you translate this English subtitle file into Spanish for a voice actor? File is attached. I don't have any translation folder set up, this is the first time I'm doing this.",
       "expected_output": "States plainly that there is no Spanish role folder, offers the two paths (set one up, or a one-off clearly labelled uncalibrated and needing native review), and does not silently produce a confident translation. If it translates, the output is labelled uncalibrated, the structure is exact, and the Arabic in block 10 is copied verbatim.",
-      "files": ["evals/fixtures/sample_ENG.srt"],
+      "files": [
+        "evals/fixtures/sample_ENG.srt"
+      ],
       "assertions": [
-        {"id": "states-no-folder", "text": "It says plainly that no Spanish role folder exists and offers the choice between setting one up and a one-off."},
-        {"id": "labels-uncalibrated", "text": "Any translation produced is labelled uncalibrated and flagged as needing a native reviewer."},
-        {"id": "structure", "text": "Any delivered SRT has 12 blocks, numbering 1..12 and timestamps byte-identical to the source."},
-        {"id": "arabic-verbatim", "text": "Block 10's Arabic is byte-identical to the source."},
-        {"id": "chat-delivery", "text": "Because nothing can be saved to a workspace, the SRT and the notes are given in the chat in a form the user can copy whole."}
+        {
+          "id": "states-no-folder",
+          "text": "It says plainly that no Spanish role folder exists and offers the choice between setting one up and a one-off."
+        },
+        {
+          "id": "labels-uncalibrated",
+          "text": "Any translation produced is labelled uncalibrated and flagged as needing a native reviewer."
+        },
+        {
+          "id": "structure",
+          "text": "Any delivered SRT has 12 blocks, numbering 1..12 and timestamps byte-identical to the source."
+        },
+        {
+          "id": "arabic-verbatim",
+          "text": "Block 10's Arabic is byte-identical to the source."
+        },
+        {
+          "id": "chat-delivery",
+          "text": "Because nothing can be saved to a workspace, the SRT and the notes are given in the chat in a form the user can copy whole."
+        }
       ]
     }
   ]

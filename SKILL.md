@@ -58,12 +58,13 @@ Many languages mark things English does not show: gender in verbs, politeness le
 3. Mark every row's Basis: `inferred: <evidence>` or `UNKNOWN`. **Never read one pair of quote marks as one speaker.** A long quoted span routinely hides several people, and the English gives no sign of the change. Check the video or the name cards for the cuts, and close and reopen the quotation at each change.
 4. **Where a file opens with a montage, take context from the full telling, not from the clip next to it.** Montage clips are cut and reordered, so the clip placed before another one is not its context. Find where the interview tells that story in full and read it there.
 5. **Show the map and wait.** No translation until a person confirms it. `UNKNOWN` means ask about that speaker. Never default to masculine.
-6. Save it as `INPUTS/YYYY-MM-DD <code> speakers.md`.
+6. Save the **confirmed** map as `INPUTS/YYYY-MM-DD <code> speakers.md`. While it is still waiting on a person, keep it as `INPUTS/YYYY-MM-DD <code> speakers UNCONFIRMED.md` and say so in the QA notes, so nobody later reads an assumption as a decision.
 
 ## Step 4. Translate
 
 ### Build it with the tools, so the structure cannot drift
 1. `python3 tools/srt_scaffold.py "<english>.srt" --cps <ceiling> --maxlen <n> --json work.json --md worksheet.md`
+   Add `--partial` when the job is an excerpt rather than a whole file, so the blocks keep the numbers they have in the full file instead of being renumbered from 1. Pass `--partial` to the QA script too. An excerpt is a normal job here, not a special case.
    This reads the timings out of the source once, gives every block a **character budget** from its real duration, and extracts any text already in its own script so it can be copied rather than retyped. Composing against the budget is far cheaper than discovering an overrun at QA and re-cutting the line.
 2. Compose into a translations file, `{"1": ["line"], "2": ["line one", "line two"]}`, or the numbered-block text form the script documents.
 3. `python3 tools/srt_assemble.py --worksheet work.json --translations trans.json --out "<target>.srt"`
@@ -128,6 +129,8 @@ Into the role's `OUTPUTS/`, never overwriting:
 The English source and the confirmed speaker map go in `INPUTS/` with the same date. Revisions are new versions (`v2`, `v3`). Never delete files.
 
 **Verify the copy you delivered, every time.** Read the file back from the path you wrote it to and confirm it is the version you built, by comparing a checksum or by re-running the structure check on that copy rather than on your working copy. Writing a file and reporting it as saved are two different things: a write can report success and leave the old version in place, and the next QA run then shows a problem you had already fixed. This has happened on a re-write to an existing path and again on a first write to a brand new path, so do it on every write, not only on revisions. Finish all fixes before the first copy goes out; if the file changes after that, fix the delivered copy in place and confirm it matches.
+
+If there is only one copy of the file, say so rather than claiming a verification you could not run.
 
 **No workspace reachable?** Deliver in the chat: the full SRT in one code block the user can copy whole, plus the QA notes, plus any new glossary term or lesson written out so the user can paste it into the folder. Say in one line that nothing was saved to disk and which files need updating when the folder is back.
 

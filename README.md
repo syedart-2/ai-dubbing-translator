@@ -62,6 +62,9 @@ The AI first proposes a speaker map and waits for your confirmation, then transl
 
 All three are plain Python 3 with no installs. They report or refuse; none of them edits your source.
 
+An excerpt of a larger file is a normal job: add `--partial` to the first and third
+commands and the blocks keep the numbers they have in the full file.
+
 **1. Read the source** (before translating):
 
 ```

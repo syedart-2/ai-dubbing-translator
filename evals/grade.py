@@ -36,13 +36,34 @@ SRC = source_blocks()
 ARABIC_B10 = " ".join(SRC[10]["text"]).strip()
 
 
+SOURCE_TEXT = SOURCE.read_text(encoding="utf-8-sig")
+
+
 def find_srt(run: Path):
-    """The delivered file, wherever the run put it, including inside a chat reply."""
-    cands = sorted(run.rglob("*.srt"))
-    cands = [c for c in cands if "_ENG" not in c.name and "approved-sample" not in c.name
-             and "REFERENCE" not in c.parts and "INPUTS" not in c.parts]
+    """The delivered file, wherever the run put it, including inside a chat reply.
+
+    Identify the source by its CONTENT, not by its name: a run may legitimately
+    name its output "sample_ENG ES.srt", and a name filter then throws away the
+    very file being graded.
+    """
+    def is_source(text):
+        return text.replace("\r\n", "\n").strip() == SOURCE_TEXT.replace("\r\n", "\n").strip()
+
+    cands = []
+    for c in sorted(run.rglob("*.srt")):
+        if "REFERENCE" in c.parts or "INPUTS" in c.parts or c.name.startswith("_graded"):
+            continue
+        try:
+            body = c.read_text(encoding="utf-8-sig")
+        except Exception:
+            continue
+        if is_source(body) or "partial_source" in c.name or "_ENG.srt" == c.name[-8:]:
+            continue
+        cands.append((c, body))
     if cands:
-        return cands[0].read_text(encoding="utf-8-sig"), str(cands[0].relative_to(run))
+        # the most complete delivered file wins
+        c, body = max(cands, key=lambda cb: cb[1].count("-->"))
+        return body, str(c.relative_to(run))
     for md in sorted(run.rglob("*.md")):
         body = md.read_text(encoding="utf-8", errors="replace")
         for fence in re.findall(r"```[a-z]*\n(.*?)```", body, re.S):
@@ -78,7 +99,11 @@ def grade(run: Path, assertions):
     srt, srt_where = find_srt(run)
     blocks = parse(srt) if srt else {}
     prose = all_prose(run)
-    haystack = (srt or "") + "\n" + prose
+    # Term checks run on the DELIVERED TEXT ONLY. The QA notes legitimately discuss
+    # the forbidden words ("glossary says ملین, never کروڑ"), so searching the prose
+    # makes every run fail a check it actually passed.
+    delivered = "\n".join(" ".join(b["text"]) for b in blocks.values()) if blocks else (srt or "")
+    haystack = (srt or "") + "\n" + prose   # for timestamp checks, which are about the whole reply
     results = []
 
     for a in assertions:
@@ -102,26 +127,26 @@ def grade(run: Path, assertions):
                       + ("" if passed else " :: " + "; ".join(errs[:4])))
 
         elif aid == "glossary-million":
-            good = "ملین" in haystack
-            bad = [w for w in ("کروڑ", "لاکھ") if w in haystack]
+            good = "ملین" in delivered
+            bad = [w for w in ("کروڑ", "لاکھ") if w in delivered]
             passed = good and not bad
-            ev = f"ملین present={good}; forbidden found={bad or 'none'}"
+            ev = f"in the delivered lines: ملین present={good}; forbidden found={bad or 'none'}"
 
         elif aid == "lessons-idiom":
-            good = "سہولت" in haystack
-            bad = "رفتار" in haystack
+            good = "سہولت" in delivered
+            bad = "رفتار" in delivered
             passed = good and not bad
-            ev = f"سہولت present={good}; رفتار present={bad}"
+            ev = f"in the delivered lines: سہولت present={good}; رفتار present={bad}"
 
         elif aid == "lessons-filler":
-            bad = "جانتے ہیں" in haystack
+            bad = "جانتے ہیں" in delivered
             passed = not bad
-            ev = f"آپ جانتے ہیں present={bad}"
+            ev = f"in the delivered lines: آپ جانتے ہیں present={bad}"
 
         elif aid == "arabic-verbatim":
             got = " ".join(blocks.get(10, {}).get("text", [])).strip() if blocks else ""
             if not got:
-                got_any = ARABIC_B10 in haystack
+                got_any = ARABIC_B10 in (srt or "") or ARABIC_B10 in prose
                 passed = got_any
                 ev = ("block 10 not located as a block; exact Arabic string found elsewhere in the "
                       f"output={got_any}")
@@ -141,6 +166,19 @@ def grade(run: Path, assertions):
                     offenders.append(n)
             passed = not offenders
             ev = f"blocks that are only function words: {offenders or 'none'}"
+
+        elif aid == "tools-used":
+            worksheets = [q for q in run.rglob("*.json") if q.name in ("work.json", "worksheet.json")]
+            trans = [q for q in run.rglob("trans*.json")]
+            passed = bool(worksheets) and bool(trans)
+            ev = (f"scaffold worksheet found={bool(worksheets)}, translations file found={bool(trans)}"
+                  + (f" ({worksheets[0].relative_to(run)})" if worksheets else ""))
+
+        elif aid == "no-adhoc-script":
+            own = [q for q in run.rglob("*.py") if "workspace/_tools" not in str(q.relative_to(run)).replace("\\", "/")]
+            passed = not own
+            ev = ("no script written by the run" if passed
+                  else "wrote its own: " + ", ".join(str(q.relative_to(run)) for q in own[:3]))
 
         elif aid == "timestamps-exact":
             found = re.findall(r"\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}", haystack)
