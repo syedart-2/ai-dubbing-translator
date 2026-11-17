@@ -22,6 +22,7 @@ Copy `templates/language-role/` once per language. The skill (`SKILL.md`) is sha
 |---|---|
 | `_brief.md` | How this language role works: client, delivery target, reviewer, modules |
 | `style-guide.md` | Word order, where a line may be cut, punctuation, numerals, register |
+| `particles.txt` | Words that may not stand alone as a block. The QA script reads this same file |
 | `glossary.md` | Fixed term choices. Binding |
 | `speaker-map-template.md` | Filled before every SRT translation |
 | `qa-notes-template.md` | Flags saved with every delivery |
@@ -30,17 +31,24 @@ Copy `templates/language-role/` once per language. The skill (`SKILL.md`) is sha
 
 ## 3. The workflow for every file
 
-1. Load the role files (brief, style guide, glossary, lessons, modules).
+1. Load the role files (brief, style guide, glossary, lessons, modules), then look up every
+   proper noun, honorific and number word in the glossary. Opening the glossary is not the
+   same as checking the file against it.
 2. Read the activation line: file, job type, format, speakers.
 3. Read the whole English file.
 4. Propose a speaker map and **wait** for a person to confirm it.
-5. Compose natural target-language speech, then cut it at phrase boundaries.
-6. Keep the structure exact (blocks, numbering, timestamps, encoding).
-7. Run the QA script until errors are zero.
-8. Read the whole file back as continuous speech.
-9. Save the SRT and the QA notes as new dated files.
-10. Send it to a native reviewer if the manager does not read the language.
-11. Write every correction into the right file the same day.
+5. Run `srt_scaffold.py` to get each block's duration, character budget and any text already
+   in its own script.
+6. Compose natural target-language speech, then cut it at phrase boundaries.
+7. Run `srt_assemble.py` to write the file. It copies the timestamps and the encoding from the
+   source and refuses a file that breaks a structure rule, so steps 6 and 7 cannot damage
+   the structure.
+8. Run the QA script until errors are zero.
+9. Read the whole file back as continuous speech.
+10. Save the SRT and the QA notes as new dated files, then read the saved copy back and
+    confirm it is the version you built.
+11. Send it to a native reviewer if the manager does not read the language.
+12. Write every correction into the right file the same day.
 
 ## 4. Why the speaker map comes first
 
@@ -91,6 +99,14 @@ The QA script checks structure. It cannot tell whether the language sounds natur
 1. Read the whole file as continuous speech, blocks ignored.
 2. Do not trust a clean result from a check that had nothing to check (for example a gender check on a file with no first-person speech).
 
+**A check that cannot fail is not evidence.** This is worth stating as a principle, because it has three distinct faces and all three have let a bad file through:
+
+| How it fails | What happened | What to do instead |
+|---|---|---|
+| Nothing to find | A gender check passed a file that contains no first-person speech anywhere. "None found" was the correct answer and said nothing about the file. | Before trusting a clean result, confirm the file contains what the check looks for. |
+| The defect made the evidence | A phrase split across a block boundary put a postposition at the start of a line, where the matcher read it as a pronoun. The broken file passed; correcting it made the check flag. A green result on a file a human then rejects means the check was not measuring the thing that was wrong. | Compare the two versions when a correction makes a check newly complain. The complaint may be the truth arriving late. |
+| The tool cannot say "no" | A speech check that picks from a word list chose "she" where the audio says "you". A pick-from-a-list tool has no way to answer "none of these". | Report the cue time for a person to listen to. And test a tool works before promising a check with it. |
+
 ## 8. The lessons loop: how the AI actually "learns"
 
 **A correction given only in chat is lost when the chat ends.** It must go into a file the same day.
@@ -105,6 +121,8 @@ The QA script checks structure. It cannot tell whether the language sounds natur
 Every lessons entry has four parts: date and video code, what went wrong, how it was caught, and **the check that prevents it next time** (the most important part).
 
 Add new entries at the end and never delete old ones. If a mistake repeats, write "repeat of <code>" in the title. A repeat means the check was not strong enough: make it stronger.
+
+**At the third occurrence, stop writing lessons about it.** A rule written down twice and broken three times will not be fixed by writing it a third time: the lesson is not where the work happens. Promote it instead. Give it its own numbered step in the workflow, or an assertion in a script that refuses the file. Every refusal in `tools/` began as a lesson that kept coming back. The hand-typed Arabic that matched at a glance and was wrong at the codepoint level is now a refusal in `srt_assemble.py`; the timestamp typed from memory is now impossible because no timestamp is typed at all.
 
 ## 9. Building a new language
 
@@ -131,13 +149,19 @@ Add new entries at the end and never delete old ones. If a mistake repeats, writ
 
 ## 10. Checklist for every file
 
+- [ ] Treated as a full job, however small the request was
 - [ ] Role files loaded (brief, style guide, glossary, lessons, modules)
-- [ ] Whole English file read
+- [ ] Every proper noun, honorific and number word looked up in the glossary
+- [ ] Whole English file read, and scanned for turn-taking
 - [ ] Speaker map confirmed by a person
+- [ ] Worksheet built from the source (`srt_scaffold.py`): budgets and text to copy verbatim
 - [ ] Composed in the target language, then cut
-- [ ] Block count, numbering and timestamps identical
+- [ ] File written by `srt_assemble.py`, or the structure rules kept by hand and said so
+- [ ] Back-translated for additions; English sentence shape pass done
 - [ ] QA script: 0 errors, advisories read
+- [ ] Every clean check confirmed to have had something to find
 - [ ] Read back as continuous speech
 - [ ] SRT and QA notes saved as new dated files
+- [ ] Saved copy read back and confirmed to be the version built
 - [ ] Native review if needed
 - [ ] Every correction written into the right file today

@@ -1,0 +1,15 @@
+# Words that may not stand alone as a whole block in <Language>.
+# One word per line. Lines starting with # are ignored.
+#
+# This is the ONE list. The style guide's "Never leave alone in a block"
+# section points here, and the QA script reads this same file:
+#
+#   python3 srt_structure_check.py target.srt --particles-file particles.txt
+#
+# Keeping two copies is how the script and the style guide end up disagreeing,
+# which has happened: the script flagged blocks the style guide allowed, and
+# the script was right. Add a word here the first time a reviewer or the script
+# objects to it standing alone.
+#
+# Typically: postpositions and case markers, conjunctions, bare pronouns that
+# are ambiguous when read aloud, and emphasis particles.

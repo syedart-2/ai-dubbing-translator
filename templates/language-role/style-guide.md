@@ -16,7 +16,11 @@ Cut only at a natural phrase boundary.
 - <for example the parts of a compound verb>
 - <...>
 
-**Never leave alone in a block:** <for example a bare particle or conjunction>
+**Never leave alone in a block:** the words listed in `particles.txt`, which is the single
+source of truth for this rule. The QA script reads that same file with `--particles-file`,
+so the guide and the script cannot drift apart. Add a word there, not here.
+
+Every block must carry at least one content word: a lone particle is ambiguous read aloud.
 
 ## Sentence frames to rewrite, not translate
 

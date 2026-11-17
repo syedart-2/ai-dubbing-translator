@@ -41,24 +41,28 @@ def main():
 
     shutil.copytree(TEMPLATE, dest)
     today = datetime.date.today().isoformat()
-    for f in dest.rglob("*.md"):
-        t = f.read_text(encoding="utf-8")
-        t = t.replace("<Language>", lang)
-        if f.name in ("_brief.md", "CHANGELOG.md"):
-            t = t.replace("YYYY-MM-DD", today, 1)
-        f.write_text(t, encoding="utf-8")
+    for pattern in ("*.md", "*.txt"):
+        for f in dest.rglob(pattern):
+            t = f.read_text(encoding="utf-8")
+            t = t.replace("<Language>", lang)
+            if f.name in ("_brief.md", "CHANGELOG.md"):
+                t = t.replace("YYYY-MM-DD", today, 1)
+            f.write_text(t, encoding="utf-8")
     lessons = dest / "_LESSONS template.md"
     if lessons.exists():
         lessons.rename(dest / f"_LESSONS - {lang} (template, rename at first entry).md")
 
     tools = ws / "_tools"
     tools.mkdir(exist_ok=True)
-    qa = tools / "srt_structure_check.py"
-    if not qa.exists():
-        shutil.copy2(REPO / "tools" / "srt_structure_check.py", qa)
+    copied = []
+    for script in ("srt_structure_check.py", "srt_scaffold.py", "srt_assemble.py"):
+        target = tools / script
+        if not target.exists():
+            shutil.copy2(REPO / "tools" / script, target)
+        copied.append(target.name)
 
     print(f"Created: {dest}")
-    print(f"QA script: {qa}")
+    print(f"Scripts in {tools}: {', '.join(copied)}")
     print("Next: put one approved sample SRT in REFERENCE/, then fill _brief.md and style-guide.md.")
 
 
