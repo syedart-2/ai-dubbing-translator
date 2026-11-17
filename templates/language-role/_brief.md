@@ -36,6 +36,8 @@ Same block count, same numbering, byte-identical timestamps, same encoding, BOM 
 ## Reading rate
 
 Maximum characters per second for the QA script: <for example 25>. Maximum line length: <for example 50>.
+These two numbers are also what `tools/srt_scaffold.py` uses to work out each block's character
+budget before composing, so keep them current.
 
 ## Reviewer
 
@@ -46,6 +48,7 @@ Maximum characters per second for the QA script: <for example 25>. Maximum line 
 | File | Purpose |
 |---|---|
 | `style-guide.md` | Word order, cut rules, punctuation, numerals |
+| `particles.txt` | Words that may not stand alone as a block. Read by the QA script |
 | `glossary.md` | Binding term choices |
 | `speaker-map-template.md` | Filled for every SRT job before translating |
 | `qa-notes-template.md` | Flags only, saved with each delivery |

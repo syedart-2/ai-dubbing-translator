@@ -27,6 +27,8 @@ your-workspace/
 |---|---|
 | `SKILL.md` | The AI skill: the step-by-step workflow for every file |
 | `templates/language-role/` | Copy this folder to start a new language |
+| `tools/srt_scaffold.py` | Reads the source once: timings, a character budget per block, and any text already in its own script |
+| `tools/srt_assemble.py` | Writes the target SRT with the source's timestamps and encoding, and refuses a file that breaks a structure rule |
 | `tools/srt_structure_check.py` | Language-neutral QA script (Python 3, no installs) |
 | `modules/` | Optional rule sets you switch on per language, such as sacred and quoted texts |
 | `docs/SETUP.md` | **Start here:** create the workspace on your computer, connect it to your AI, and how the skill works |
@@ -56,25 +58,61 @@ The AI first proposes a speaker map and waits for your confirmation, then transl
 
 **Other AI assistants:** paste `SKILL.md` as the system or project instructions and give the assistant access to your workspace folder.
 
-## Run the QA script
+## Run the scripts
+
+All three are plain Python 3 with no installs. They report or refuse; none of them edits your source.
+
+An excerpt of a larger file is a normal job: add `--partial` to the first and third
+commands and the blocks keep the numbers they have in the full file.
+
+**1. Read the source** (before translating):
 
 ```
-python3 tools/srt_structure_check.py "translated.srt" --source "english.srt" --cps 25 --maxlen 50
+python3 tools/srt_scaffold.py "english.srt" --cps 25 --maxlen 50 --json work.json --md worksheet.md
+```
+
+Gives every block its real duration, a **character budget** at your reading-rate ceiling, and any
+text already in its own script (Arabic in an English SRT, say) pulled out so it can be copied
+instead of retyped.
+
+**2. Write the target file** (after translating):
+
+```
+python3 tools/srt_assemble.py --worksheet work.json --translations trans.json --out "translated.srt"
+```
+
+Timestamps and numbering come from the worksheet, so no timestamp is ever typed. The source's BOM
+and line endings are reproduced. It **refuses to write** if a block is missing, empty, over two
+lines, carries an invisible direction character, or has lost a string that was meant to be copied
+verbatim. Exit code 2 means nothing was written.
+
+**3. Check it** (before delivering):
+
+```
+python3 tools/srt_structure_check.py "translated.srt" --source "english.srt" --cps 25 --maxlen 50 \
+        --particles-file particles.txt --json qa.json
 ```
 
 It reports only and never edits. Exit code 1 means there are errors to fix.
 
-Checks: block count, numbering, timestamps against the source, empty blocks, blocks with 3 or more lines, extra or double spaces, invisible direction characters, line length, reading speed, untranslated blocks, BOM and line endings, and vocalised Arabic copied exactly from the source.
+Checks: block count, numbering, timestamps against the source, timestamps that end before they
+start or run backwards, overlapping blocks, empty blocks, blocks with 3 or more lines, blocks that
+carry no content word, extra or double spaces, invisible direction characters, line length, reading
+speed, untranslated blocks, BOM and line endings, and vocalised Arabic copied exactly from the
+source.
 
 It checks **structure only**. A clean run does not mean the translation is good: always read the whole file back as continuous speech, and use a native reviewer for any language you do not read.
 
 ## Principles
 
-- **Timing is sacred.** Same blocks, same numbers, byte-identical timestamps.
+- **Timing is sacred.** Same blocks, same numbers, byte-identical timestamps, copied by a script and never typed.
+- **No quick jobs.** Six pasted lines get the same rules as a whole episode. Skipping them is how a corrected mistake comes back.
 - **Compose, then cut.** Write natural speech first, then split it at the language's own phrase boundaries.
 - **Ask, do not guess.** Speakers, genders and doubtful terms are confirmed by a person.
 - **Write every lesson down the same day,** with the check that prevents it.
-- **Never overwrite.** New versions only.
+- **A check that cannot fail is not evidence.** A clean result from a check that had nothing to find proves nothing.
+- **At the third repeat, stop writing the lesson and change the machine.** Every refusal in `tools/` started as a lesson that came back.
+- **Never overwrite.** New versions only, and read the delivered copy back before calling it saved.
 
 ## License
 

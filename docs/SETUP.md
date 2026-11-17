@@ -12,7 +12,7 @@ App menus change often. Where this page names a button or menu, check your app's
 |---|---|
 | A computer (Mac, Windows or Linux) | The workspace folder lives here |
 | An AI assistant that can read and write files in a folder | For example the Claude desktop app with folder access, or Claude Code. Others work if they can read and write your folder |
-| Python 3 (free) | Runs the QA script and the setup script. Most Mac and Linux machines have it; on Windows, install it from python.org. The commands on this page use `python3`; on Windows use `py` or `python` instead |
+| Python 3 (free) | Runs the three scripts. Most Mac and Linux machines have it; on Windows, install it from python.org. The commands on this page use `python3`; on Windows use `py` or `python` instead |
 | One approved SRT in each target language | Calibrates the style guide. Without it, the system works but is "uncalibrated" |
 
 ---
@@ -32,7 +32,9 @@ Example: `Documents/Dubbing Workspace`
 ```
 Dubbing Workspace/
 ├── _tools/
-│   └── srt_structure_check.py
+│   ├── srt_scaffold.py          reads the source: timings and character budgets
+│   ├── srt_assemble.py          writes the target file with the source's timings
+│   └── srt_structure_check.py   checks the finished file
 ├── Urdu Dubbing Translator/
 └── Spanish Dubbing Translator/
 ```
@@ -43,9 +45,9 @@ Dubbing Workspace/
 python3 tools/new_language.py Spanish --workspace "~/Documents/Dubbing Workspace"
 ```
 
-It copies the template, fills in the language name and date, copies the QA script into `_tools/`, and never overwrites an existing folder.
+It copies the template, fills in the language name and date, copies all three scripts into `_tools/`, and never overwrites an existing folder.
 
-**Without a terminal:** copy `templates/language-role/` into your workspace yourself, rename it `Spanish Dubbing Translator`, and copy `tools/srt_structure_check.py` into a `_tools` folder.
+**Without a terminal:** copy `templates/language-role/` into your workspace yourself, rename it `Spanish Dubbing Translator`, and copy the three scripts from `tools/` into a `_tools` folder.
 
 **Optional, for working from other devices:** put the workspace inside a synced folder (Google Drive, OneDrive, Dropbox, iCloud). If your sync app offers it, set the workspace to **always keep files on this device**; otherwise the AI may find files that exist only in the cloud and cannot open them. See `STORAGE.md`.
 
@@ -159,6 +161,8 @@ These apply on Mac, Windows and Linux alike.
 | The AI repeats an old mistake | The correction was given in chat only | Ask it to write the lesson into the lessons file; check the entry has a concrete "check that prevents it" |
 | The translation sounds like English in another language | It was cut on the English blocks before composing | Point the AI to Step 4 of the skill: compose first, then cut |
 | QA script error: block count differs | A block was merged, split or dropped | The script names the first place the timestamps stop matching |
+| `srt_assemble.py` says REFUSED and writes nothing | A structure rule was broken, so the file was not written at all | Read the list it printed, fix those blocks in the translations file, run it again. Nothing was damaged |
+| REFUSED: "already in its own script ... not present exactly" | A word that should have been copied from the source was retyped, and differs invisibly | Copy that string from the worksheet's `preserve` column instead of typing it |
 | `python3` not found | Python not installed, or on Windows the command has a different name | Install Python 3 from python.org. On Windows, try `py` or `python` instead of `python3` |
 | Letters show as boxes or question marks | The SRT was saved in the wrong text encoding | Save it as UTF-8 in your text editor, then run the QA script again |
 | A path with spaces fails in the terminal | The path was not in quotes | Put the whole path in double quotes, as in the examples |
